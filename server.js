@@ -11,7 +11,7 @@ const port = 3000;
 // Set up Multer for file uploads
 const upload = multer({
   dest: "uploads/", // temporary directory for uploaded files
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB file size limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB high-resolution support
   fileFilter: (req, file, cb) => {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.mimetype)) {
