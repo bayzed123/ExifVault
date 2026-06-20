@@ -1,0 +1,253 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayezid Storyline Archival Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        h1 {
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+        .drop-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .drop-area.highlight {
+            background-color: #e9e9e9;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .message {
+            margin-top: 20px;
+            font-weight: bold;
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        .profile-editor {
+            margin-top: 30px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+            text-align: left;
+        }
+        .profile-editor label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .profile-editor input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .profile-editor button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        .profile-editor button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Bayezid Storyline Archival Tool</h1>
+        <div class="drop-area" id="drop-area">
+            <p>Drag & Drop your image here or click to select</p>
+            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
+        </div>
+        <div class="message" id="message"></div>
+
+        <div class="profile-editor">
+            <h2>Custom Metadata Profile</h2>
+            <label for="make">Make:</label>
+            <input type="text" id="make" value="Epson">
+
+            <label for="model">Model:</label>
+            <input type="text" id="model" value="Perfection V850 Pro">
+
+            <label for="software">Software:</label>
+            <input type="text" id="software" value="VueScan 9">
+
+            <label for="artist">Artist:</label>
+            <input type="text" id="artist" value="Bayezid Storyline">
+
+            <label for="copyright">Copyright:</label>
+            <input type="text" id="copyright" value="© 2026 Bayezid Storyline">
+
+            <label for="byline">By-line:</label>
+            <input type="text" id="byline" value="Bayezid Storyline">
+
+            <label for="copyrightNotice">Copyright Notice:</label>
+            <input type="text" id="copyrightNotice" value="All Rights Reserved. Restored by Bayezid Storyline.">
+
+            <label for="objectName">Object Name:</label>
+            <input type="text" id="objectName" value="Historical Archive">
+
+            <button id="saveProfile">Save Profile</button>
+        </div>
+    </div>
+
+    <script>
+        const dropArea = document.getElementById("drop-area");
+        const fileInput = document.getElementById("fileInput");
+        const messageDiv = document.getElementById("message");
+        const saveProfileBtn = document.getElementById("saveProfile");
+
+        const profileFields = [
+            "make", "model", "software", "artist", "copyright",
+            "byline", "copyrightNotice", "objectName"
+        ];
+
+        // Load profile from local storage on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            loadProfile();
+        });
+
+        function loadProfile() {
+            profileFields.forEach(field => {
+                const value = localStorage.getItem(field);
+                if (value) {
+                    document.getElementById(field).value = value;
+                }
+            });
+        }
+
+        function saveProfile() {
+            profileFields.forEach(field => {
+                const value = document.getElementById(field).value;
+                localStorage.setItem(field, value);
+            });
+            messageDiv.textContent = "Profile saved successfully!";
+            setTimeout(() => messageDiv.textContent = "", 3000);
+        }
+
+        saveProfileBtn.addEventListener("click", saveProfile);
+
+        dropArea.addEventListener("click", () => fileInput.click());
+
+        ["dragenter", "dragover", "dragleave", "drop"].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ["dragenter", "dragover"].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ["dragleave", "drop"].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight() {
+            dropArea.classList.add("highlight");
+        }
+
+        function unhighlight() {
+            dropArea.classList.remove("highlight");
+        }
+
+        dropArea.addEventListener("drop", handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        fileInput.addEventListener("change", (e) => {
+            handleFiles(e.target.files);
+        });
+
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+
+            const file = files[0];
+            messageDiv.textContent = `Processing ${file.name}...`;
+            messageDiv.classList.remove("error");
+
+            const formData = new FormData();
+            formData.append("image", file);
+
+            // Get custom metadata from local storage
+            const customMetadata = {};
+            profileFields.forEach(field => {
+                customMetadata[field] = localStorage.getItem(field) || document.getElementById(field).value;
+            });
+            formData.append("customMetadata", JSON.stringify(customMetadata));
+
+            try {
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const originalFileName = file.name;
+                    const processedFileName = `Archive_${originalFileName}`;
+
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.style.display = "none";
+                    a.href = url;
+                    a.download = processedFileName; // Set the custom download filename
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+
+                    messageDiv.textContent = "Success! File downloaded.";
+                    fileInput.value = ""; // Clear the file input
+                } else {
+                    const errorText = await response.text();
+                    messageDiv.textContent = `Error: ${errorText}`;
+                    messageDiv.classList.add("error");
+                }
+            } catch (error) {
+                messageDiv.textContent = `Network error: ${error.message}`;
+                messageDiv.classList.add("error");
+            }
+        }
+    </script>
+</body>
+</html>
