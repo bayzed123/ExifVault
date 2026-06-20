@@ -4,92 +4,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bayezid Storyline Archival Tool</title>
+    <title>Bayezid Storyline Archival Tool - Signature Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #0056b3;
+            --secondary-color: #007bff;
+            --background-color: #f0f2f5;
+            --card-background: #ffffff;
+            --text-color: #333333;
+            --light-text-color: #666666;
+            --border-color: #e0e0e0;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background-color: #f4f4f4;
-            color: #333;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
+
         .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-background);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             text-align: center;
             width: 90%;
-            max-width: 600px;
+            max-width: 900px;
+            margin: 20px auto;
         }
+
         h1 {
-            color: #0056b3;
-            margin-bottom: 20px;
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 2.5em;
         }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-color);
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .tagline {
+            color: var(--light-text-color);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
         .drop-area {
-            border: 2px dashed #ccc;
-            border-radius: 8px;
-            padding: 40px 20px;
-            margin-bottom: 20px;
+            border: 3px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 50px 30px;
+            margin-bottom: 30px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            background-color: #fdfdfd;
         }
+
+        .drop-area:hover,
         .drop-area.highlight {
-            background-color: #e9e9e9;
+            background-color: #e9f5ff;
+            border-color: var(--secondary-color);
         }
+
+        .drop-area p {
+            margin: 0;
+            font-size: 1.2em;
+            color: var(--light-text-color);
+        }
+
         input[type="file"] {
             display: none;
         }
+
         .message {
             margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
             font-weight: bold;
-            color: green;
+            color: var(--success-color);
+            background-color: #e6ffe6;
+            border: 1px solid var(--success-color);
+            display: none; /* Hidden by default */
         }
-        .error {
-            color: red;
+
+        .message.error {
+            color: var(--error-color);
+            background-color: #ffe6e6;
+            border: 1px solid var(--error-color);
         }
-        .profile-editor {
-            margin-top: 30px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+
+        .profile-editor,
+        .metadata-preview {
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 30px;
             text-align: left;
         }
-        .profile-editor label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .profile-editor input[type="text"],
-        .profile-editor textarea {
-            width: calc(100% - 22px);
-            padding: 10px;
+
+        .form-group {
             margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: calc(100% - 24px); /* Account for padding and border */
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1em;
+            color: var(--text-color);
+            background-color: #fdfdfd;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+
+        .form-group textarea {
             resize: vertical;
+            min-height: 80px;
         }
-        .profile-editor button {
-            background-color: #007bff;
+
+        button {
+            background-color: var(--primary-color);
             color: white;
-            padding: 10px 15px;
+            padding: 12px 25px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
+            font-size: 1.1em;
+            font-weight: 700;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 10px;
         }
-        .profile-editor button:hover {
-            background-color: #0056b3;
+
+        button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .metadata-preview-content {
+            background-color: #f9f9f9;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            text-align: left;
+            font-size: 0.9em;
+            color: var(--light-text-color);
+            max-height: 300px;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Bayezid Storyline Archival Tool</h1>
+        <p class="tagline">Preserve history, define legacy. Strip AI fingerprints, inject authentic narratives.</p>
+
         <div class="drop-area" id="drop-area">
             <p>Drag & Drop your image here or click to select</p>
             <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
@@ -98,37 +195,64 @@
 
         <div class="profile-editor">
             <h2>Custom Metadata Profile</h2>
-            <label for="make">Make:</label>
-            <input type="text" id="make" value="Epson">
+            <div class="form-group">
+                <label for="make">Make:</label>
+                <input type="text" id="make" value="Epson">
+            </div>
 
-            <label for="model">Model:</label>
-            <input type="text" id="model" value="Perfection V850 Pro">
+            <div class="form-group">
+                <label for="model">Model:</label>
+                <input type="text" id="model" value="Perfection V850 Pro">
+            </div>
 
-            <label for="software">Software:</label>
-            <input type="text" id="software" value="VueScan 9">
+            <div class="form-group">
+                <label for="software">Software:</label>
+                <input type="text" id="software" value="VueScan 9">
+            </div>
 
-            <label for="artist">Artist:</label>
-            <input type="text" id="artist" value="Bayezid Storyline">
+            <div class="form-group">
+                <label for="artist">Artist:</label>
+                <input type="text" id="artist" value="Bayezid Storyline">
+            </div>
 
-            <label for="copyright">Copyright:</label>
-            <input type="text" id="copyright" value="© 2026 Bayezid Storyline">
+            <div class="form-group">
+                <label for="copyright">Copyright:</label>
+                <input type="text" id="copyright" value="© 2026 Bayezid Storyline">
+            </div>
 
-            <label for="byline">By-line:</label>
-            <input type="text" id="byline" value="Bayezid Storyline">
+            <div class="form-group">
+                <label for="byline">By-line:</label>
+                <input type="text" id="byline" value="Bayezid Storyline">
+            </div>
 
-            <label for="copyrightNotice">Copyright Notice:</label>
-            <input type="text" id="copyrightNotice" value="All Rights Reserved. Restored by Bayezid Storyline.">
+            <div class="form-group">
+                <label for="copyrightNotice">Copyright Notice:</label>
+                <input type="text" id="copyrightNotice" value="All Rights Reserved. Restored by Bayezid Storyline.">
+            </div>
 
-            <label for="objectName">Object Name:</label>
-            <input type="text" id="objectName" value="Historical Archive">
+            <div class="form-group">
+                <label for="objectName">Object Name:</label>
+                <input type="text" id="objectName" value="Historical Archive">
+            </div>
 
-            <label for="description">Description (Caption-Abstract):</label>
-            <textarea id="description" rows="3" placeholder="Detailed description of the image content..."></textarea>
+            <div class="form-group">
+                <label for="description">Description (Caption-Abstract):</label>
+                <textarea id="description" rows="3" placeholder="Detailed description of the image content..."></textarea>
+            </div>
 
-            <label for="keywords">Keywords (comma-separated):</label>
-            <input type="text" id="keywords" placeholder="historical, archive, Bayezid, etc.">
+            <div class="form-group">
+                <label for="keywords">Keywords (comma-separated):</label>
+                <input type="text" id="keywords" placeholder="historical, archive, Bayezid, etc.">
+            </div>
 
             <button id="saveProfile">Save Profile</button>
+        </div>
+
+        <div class="metadata-preview">
+            <h2>Live Metadata Preview</h2>
+            <div class="metadata-preview-content" id="metadata-preview-content">
+                <!-- Live metadata will be displayed here -->
+            </div>
         </div>
     </div>
 
@@ -137,6 +261,7 @@
         const fileInput = document.getElementById("fileInput");
         const messageDiv = document.getElementById("message");
         const saveProfileBtn = document.getElementById("saveProfile");
+        const metadataPreviewContent = document.getElementById("metadata-preview-content");
 
         const profileFields = [
             "make", "model", "software", "artist", "copyright",
@@ -146,6 +271,7 @@
         // Load profile from local storage on page load
         document.addEventListener("DOMContentLoaded", () => {
             loadProfile();
+            updateMetadataPreview();
         });
 
         function loadProfile() {
@@ -164,8 +290,33 @@
                 localStorage.setItem(field, value);
             });
             messageDiv.textContent = "Profile saved successfully!";
-            setTimeout(() => messageDiv.textContent = "", 3000);
+            messageDiv.classList.remove("error");
+            messageDiv.style.display = "block";
+            setTimeout(() => messageDiv.style.display = "none", 3000);
+            updateMetadataPreview();
         }
+
+        function updateMetadataPreview() {
+            let previewText = ";; Live Metadata Preview (simulated) ;;\n\n";
+            profileFields.forEach(field => {
+                const value = document.getElementById(field).value;
+                if (value) {
+                    previewText += `${field.charAt(0).toUpperCase() + field.slice(1)}: ${value}\n`;
+                }
+            });
+            // Add randomized fields for preview (simulated)
+            previewText += `\nEXIF:DateTimeOriginal: (Randomized)\n`;
+            previewText += `EXIF:CreateDate: (Randomized)\n`;
+            previewText += `EXIF:ModifyDate: (Randomized)\n`;
+            previewText += `EXIF:SerialNumber: (Randomized)\n`;
+
+            metadataPreviewContent.textContent = previewText;
+        }
+
+        // Add event listeners to update preview on input change
+        profileFields.forEach(field => {
+            document.getElementById(field).addEventListener("input", updateMetadataPreview);
+        });
 
         saveProfileBtn.addEventListener("click", saveProfile);
 
@@ -214,6 +365,7 @@
             const file = files[0];
             messageDiv.textContent = `Processing ${file.name}...`;
             messageDiv.classList.remove("error");
+            messageDiv.style.display = "block";
 
             const formData = new FormData();
             formData.append("image", file);
@@ -221,7 +373,7 @@
             // Get custom metadata from local storage or current input values
             const customMetadata = {};
             profileFields.forEach(field => {
-                customMetadata[field] = localStorage.getItem(field) || document.getElementById(field).value;
+                customMetadata[field] = document.getElementById(field).value;
             });
             formData.append("customMetadata", JSON.stringify(customMetadata));
 
@@ -247,14 +399,17 @@
 
                     messageDiv.textContent = "Success! File downloaded.";
                     fileInput.value = ""; // Clear the file input
+                    setTimeout(() => messageDiv.style.display = "none", 3000);
                 } else {
                     const errorText = await response.text();
                     messageDiv.textContent = `Error: ${errorText}`;
                     messageDiv.classList.add("error");
+                    setTimeout(() => messageDiv.style.display = "none", 5000);
                 }
             } catch (error) {
                 messageDiv.textContent = `Network error: ${error.message}`;
                 messageDiv.classList.add("error");
+                setTimeout(() => messageDiv.style.display = "none", 5000);
             }
         }
     </script>

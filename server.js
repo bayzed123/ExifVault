@@ -21,10 +21,7 @@ const upload = multer({
   },
 });
 
-// Serve the index.html file from the root directory
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
+// The index.html will be served directly by GitHub Pages. The backend only handles API requests.
 
 // Helper function to generate random dates within a range
 function getRandomDate(startYear, endYear) {
