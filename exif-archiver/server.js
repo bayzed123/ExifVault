@@ -21,8 +21,10 @@ const upload = multer({
   },
 });
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "public")));
+// Serve the index.html file from the root directory
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // Helper function to generate random dates within a range
 function getRandomDate(startYear, endYear) {
