@@ -31,7 +31,12 @@ app.post("/upload", upload.single("image"), (req, res) => {
   const escape = (s) => (s || "").replace(/"/g, '\\"');
   
   // Build the ExifTool command dynamically based on provided tags
-  let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all="];
+  // -all= : Wipe all standard tags
+  // -XMP:all= -IPTC:all= -Photoshop:all= : Wipe deep metadata layers
+  // --trailer:all : Remove all data after the image end (where AI/Adobe often hide things)
+  // -MakerNotes:all= : Wipe manufacturer-specific hidden data
+  // -PreviewImage= -ThumbnailImage= : Wipe hidden low-res previews of the original
+  let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all=", "--trailer:all", "-MakerNotes:all=", "-PreviewImage=", "-ThumbnailImage="];
   
   // Mapping frontend tag names to ExifTool tag names
   const tagMap = {
