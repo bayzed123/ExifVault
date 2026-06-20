@@ -6,10 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bayezid Storyline Archival Tool</title>
     <style>
+        :root {
+            --accent: #c9a86a;
+            --bg: #0a0a0a;
+            --card: #141414;
+            --text: #e0e0e0;
+        }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f0f0f;
-            color: #e0e0e0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -18,76 +24,83 @@
             margin: 0;
         }
         .container {
-            background-color: #1a1a1a;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background-color: var(--card);
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
             text-align: center;
             width: 90%;
-            max-width: 600px;
-            border: 1px solid #333;
+            max-width: 650px;
+            border: 1px solid #2a2a2a;
         }
         h1 {
-            color: #c9a86a;
-            margin-bottom: 10px;
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .tagline {
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 0.85rem;
+            text-transform: uppercase;
             letter-spacing: 1px;
         }
-        p {
-            color: #888;
-            margin-bottom: 30px;
-            font-size: 0.9rem;
-        }
         .drop-area {
-            border: 2px dashed #444;
-            border-radius: 8px;
-            padding: 60px 20px;
+            border: 2px dashed #333;
+            border-radius: 10px;
+            padding: 80px 20px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            background-color: #222;
+            transition: 0.3s;
+            background-color: #0d0d0d;
         }
         .drop-area:hover, .drop-area.highlight {
-            border-color: #c9a86a;
-            background-color: #2a2a2a;
+            border-color: var(--accent);
+            background-color: #1a1a1a;
         }
         .drop-area p {
             margin: 0;
-            font-size: 1.1rem;
-            color: #bbb;
+            font-size: 1.2rem;
+            color: #999;
         }
         input[type="file"] {
             display: none;
         }
-        .status {
-            margin-top: 20px;
-            font-weight: bold;
+        #status {
+            margin-top: 30px;
+            font-weight: 600;
+            font-size: 1rem;
             height: 24px;
         }
+        .processing { color: var(--accent); }
         .success { color: #4caf50; }
         .error { color: #f44336; }
-        .processing { color: #c9a86a; }
         
         .footer {
-            margin-top: 40px;
-            font-size: 0.8rem;
-            color: #555;
+            margin-top: 50px;
+            font-size: 0.75rem;
+            color: #444;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Bayezid Storyline Archival Tool</h1>
-        <p>Upload & Instantly Download: Stripping AI Tags & Injecting Custom Profile</p>
+        <h1>Bayezid Storyline</h1>
+        <div class="tagline">Automated High-Res Archival Suite</div>
         
         <div class="drop-area" id="drop-area">
-            <p>Drag & Drop Image or Click to Select</p>
-            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
+            <p>DEPOSIT ASSET FOR INSTANT ARCHIVAL</p>
+            <span style="font-size: 0.7rem; color: #555; display: block; margin-top: 10px;">JPG, PNG, WEBP UP TO 50MB</span>
+            <input type="file" id="fileInput" accept="image/*">
         </div>
         
-        <div class="status" id="status"></div>
+        <div id="status"></div>
     </div>
     
     <div class="footer">
-        © 2026 Bayezid Storyline Historical Archive
+        PROFESSIONAL GRADE METADATA MANIPULATION
     </div>
 
     <script>
@@ -118,13 +131,13 @@
             if (files.length === 0) return;
             const file = files[0];
             
-            status.textContent = `Processing ${file.name}...`;
-            status.className = 'status processing';
+            status.textContent = `COMMITTING ${file.name.toUpperCase()} TO ARCHIVE...`;
+            status.className = 'processing';
 
             const formData = new FormData();
             formData.append('image', file);
             
-            // Default Profile
+            // Hardcoded Bayezid Signature
             const meta = {
                 make: "Epson",
                 model: "Perfection V850 Pro",
@@ -150,17 +163,17 @@
                     a.click();
                     window.URL.revokeObjectURL(url);
                     
-                    status.textContent = "Success! Archive Downloaded.";
-                    status.className = 'status success';
+                    status.textContent = "ARCHIVAL COMPLETE. DOWNLOAD INITIATED.";
+                    status.className = 'success';
                     fileInput.value = '';
                 } else {
                     const errText = await res.text();
-                    status.textContent = "Error: " + errText;
-                    status.className = 'status error';
+                    status.textContent = "ARCHIVAL ERROR: " + errText;
+                    status.className = 'error';
                 }
             } catch (err) {
-                status.textContent = "Network Error: " + err.message;
-                status.className = 'status error';
+                status.textContent = "CONNECTION ERROR: " + err.message;
+                status.className = 'error';
             }
         }
     </script>
