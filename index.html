@@ -4,317 +4,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bayezid Storyline | Museum-Grade Archival Suite</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Bayezid Storyline Archival Tool</title>
     <style>
-        :root {
-            --bg: #0a0a0a;
-            --card-bg: #141414;
-            --accent: #c9a86a; /* Archival Gold */
-            --text: #e0e0e0;
-            --text-dim: #a0a0a0;
-            --border: #2a2a2a;
-            --success: #4caf50;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            background: var(--bg);
-            color: var(--text);
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f0f;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            margin: 0;
         }
-
-        .app-container {
-            width: 100%;
-            max-width: 1100px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            overflow: hidden;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        @media (max-width: 900px) {
-            .app-container { grid-template-columns: 1fr; }
-        }
-
-        /* LEFT SIDE: PREVIEW & UPLOAD */
-        .preview-pane {
+        .container {
+            background-color: #1a1a1a;
             padding: 40px;
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-            background: linear-gradient(145deg, #141414 0%, #0f0f0f 100%);
-        }
-
-        .header h1 {
-            font-family: 'Cinzel', serif;
-            color: var(--accent);
-            font-size: 1.8rem;
-            letter-spacing: 2px;
-            margin-bottom: 5px;
-        }
-
-        .header p {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .drop-zone {
-            flex-grow: 1;
-            border: 1px dashed var(--border);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: 0.3s;
-            position: relative;
-            min-height: 300px;
-            background: #1a1a1a;
-        }
-
-        .drop-zone:hover { border-color: var(--accent); background: #202020; }
-        .drop-zone.active { border-color: var(--accent); background: #252525; }
-
-        #image-display {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            display: none;
-        }
-
-        .drop-hint { text-align: center; padding: 20px; }
-        .drop-hint i { font-size: 2rem; color: var(--accent); display: block; margin-bottom: 10px; }
-
-        /* RIGHT SIDE: METADATA EDITOR */
-        .editor-pane {
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .editor-pane h2 {
-            font-size: 0.9rem;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-
-        .input-group { display: flex; flex-direction: column; gap: 8px; }
-        .input-group label { font-size: 0.75rem; color: var(--text-dim); font-weight: 600; }
-        
-        input, textarea {
-            background: #1a1a1a;
-            border: 1px solid var(--border);
-            padding: 12px;
-            color: var(--text);
-            font-family: inherit;
-            font-size: 0.9rem;
-            border-radius: 2px;
-            outline: none;
-            transition: 0.3s;
-        }
-
-        input:focus, textarea:focus { border-color: var(--accent); }
-
-        .btn-stack { display: flex; gap: 10px; margin-top: 10px; }
-
-        button {
-            flex: 1;
-            padding: 15px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid transparent;
-            font-size: 0.8rem;
-        }
-
-        .btn-archive { background: var(--accent); color: #000; }
-        .btn-archive:hover { background: #dcb97a; }
-        .btn-archive:disabled { background: #333; color: #666; cursor: not-allowed; }
-
-        .btn-save { background: transparent; border-color: var(--border); color: var(--text); }
-        .btn-save:hover { border-color: var(--accent); color: var(--accent); }
-
-        .status-msg {
-            font-size: 0.8rem;
-            padding: 10px;
-            border-radius: 2px;
-            display: none;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             text-align: center;
+            width: 90%;
+            max-width: 600px;
+            border: 1px solid #333;
         }
-
-        .status-msg.success { background: rgba(76, 175, 80, 0.1); color: var(--success); border: 1px solid var(--success); }
-        .status-msg.error { background: rgba(244, 67, 54, 0.1); color: #f44336; border: 1px solid #f44336; }
+        h1 {
+            color: #c9a86a;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        p {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        .drop-area {
+            border: 2px dashed #444;
+            border-radius: 8px;
+            padding: 60px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #222;
+        }
+        .drop-area:hover, .drop-area.highlight {
+            border-color: #c9a86a;
+            background-color: #2a2a2a;
+        }
+        .drop-area p {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #bbb;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .status {
+            margin-top: 20px;
+            font-weight: bold;
+            height: 24px;
+        }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .processing { color: #c9a86a; }
+        
+        .footer {
+            margin-top: 40px;
+            font-size: 0.8rem;
+            color: #555;
+        }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Preview Section -->
-        <div class="preview-pane">
-            <div class="header">
-                <h1>BAYEZID STORYLINE</h1>
-                <p>Museum-Grade Archival Suite</p>
-            </div>
-            
-            <div class="drop-zone" id="drop-zone">
-                <div class="drop-hint" id="drop-hint">
-                    <i>&#10064;</i>
-                    <p>Deposit High-Res Asset</p>
-                    <span style="font-size: 0.7rem; color: var(--text-dim);">JPG, PNG, WEBP UP TO 50MB</span>
-                </div>
-                <img id="image-display" src="" alt="Archival Preview">
-                <input type="file" id="file-input" style="display: none;" accept="image/*">
-            </div>
-
-            <div class="status-msg" id="status-msg"></div>
+    <div class="container">
+        <h1>Bayezid Storyline Archival Tool</h1>
+        <p>Upload & Instantly Download: Stripping AI Tags & Injecting Custom Profile</p>
+        
+        <div class="drop-area" id="drop-area">
+            <p>Drag & Drop Image or Click to Select</p>
+            <input type="file" id="fileInput" accept="image/jpeg, image/png, image/webp">
         </div>
-
-        <!-- Editor Section -->
-        <div class="editor-pane">
-            <h2>Archival Signature</h2>
-            
-            <div class="input-group">
-                <label>HARDWARE MAKE</label>
-                <input type="text" id="make" value="Epson">
-            </div>
-
-            <div class="input-group">
-                <label>HARDWARE MODEL</label>
-                <input type="text" id="model" value="Perfection V850 Pro">
-            </div>
-
-            <div class="input-group">
-                <label>ARTIST / CURATOR</label>
-                <input type="text" id="artist" value="Bayezid Storyline">
-            </div>
-
-            <div class="input-group">
-                <label>HISTORICAL NARRATIVE (DESCRIPTION)</label>
-                <textarea id="description" rows="3" placeholder="Describe the historical significance..."></textarea>
-            </div>
-
-            <div class="input-group">
-                <label>ARCHIVAL KEYWORDS</label>
-                <input type="text" id="keywords" placeholder="history, rare, archive...">
-            </div>
-
-            <div class="btn-stack">
-                <button class="btn-save" id="btn-save">Save Profile</button>
-                <button class="btn-archive" id="btn-archive" disabled>Commit to Archive</button>
-            </div>
-        </div>
+        
+        <div class="status" id="status"></div>
+    </div>
+    
+    <div class="footer">
+        © 2026 Bayezid Storyline Historical Archive
     </div>
 
     <script>
-        const dropZone = document.getElementById('drop-zone');
-        const fileInput = document.getElementById('file-input');
-        const imageDisplay = document.getElementById('image-display');
-        const dropHint = document.getElementById('drop-hint');
-        const btnArchive = document.getElementById('btn-archive');
-        const btnSave = document.getElementById('btn-save');
-        const statusMsg = document.getElementById('status-msg');
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
 
-        let activeFile = null;
+        dropArea.onclick = () => fileInput.click();
 
-        // Load Defaults
-        const fields = ['make', 'model', 'artist', 'description', 'keywords'];
-        fields.forEach(f => {
-            const saved = localStorage.getItem('bs_' + f);
-            if (saved) document.getElementById(f).value = saved;
-        });
+        fileInput.onchange = (e) => handleFiles(e.target.files);
 
-        // Save Defaults
-        btnSave.onclick = () => {
-            fields.forEach(f => localStorage.setItem('bs_' + f, document.getElementById(f).value));
-            showStatus('Profile settings secured.', 'success');
-        };
-
-        // File Selection
-        dropZone.onclick = () => fileInput.click();
-        fileInput.onchange = e => handleFile(e.target.files[0]);
-
-        // Drag & Drop
-        dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('active'); };
-        dropZone.ondragleave = () => dropZone.classList.remove('active');
-        dropZone.ondrop = e => {
+        dropArea.ondragover = (e) => {
             e.preventDefault();
-            dropZone.classList.remove('active');
-            handleFile(e.dataTransfer.files[0]);
+            dropArea.classList.add('highlight');
         };
 
-        function handleFile(file) {
-            if (!file || !file.type.startsWith('image/')) return;
-            activeFile = file;
-            const reader = new FileReader();
-            reader.onload = e => {
-                imageDisplay.src = e.target.result;
-                imageDisplay.style.display = 'block';
-                dropHint.style.display = 'none';
-                btnArchive.disabled = false;
-                showStatus('Asset loaded. Ready for archival.', 'success');
-            };
-            reader.readAsDataURL(file);
-        }
+        dropArea.ondragleave = () => {
+            dropArea.classList.remove('highlight');
+        };
 
-        function showStatus(msg, type) {
-            statusMsg.textContent = msg;
-            statusMsg.className = 'status-msg ' + type;
-            statusMsg.style.display = 'block';
-            if (type === 'success') setTimeout(() => statusMsg.style.display = 'none', 3000);
-        }
+        dropArea.ondrop = (e) => {
+            e.preventDefault();
+            dropArea.classList.remove('highlight');
+            handleFiles(e.dataTransfer.files);
+        };
 
-        // Processing
-        btnArchive.onclick = async () => {
-            if (!activeFile) return;
+        async function handleFiles(files) {
+            if (files.length === 0) return;
+            const file = files[0];
             
-            btnArchive.disabled = true;
-            btnArchive.textContent = 'Processing...';
-            
+            status.textContent = `Processing ${file.name}...`;
+            status.className = 'status processing';
+
             const formData = new FormData();
-            formData.append('image', activeFile);
+            formData.append('image', file);
             
-            const meta = {};
-            fields.forEach(f => meta[f] = document.getElementById(f).value);
+            // Default Profile
+            const meta = {
+                make: "Epson",
+                model: "Perfection V850 Pro",
+                artist: "Bayezid Storyline",
+                description: "Historical Archive Restoration",
+                keywords: "history, archive, rare"
+            };
             formData.append('customMetadata', JSON.stringify(meta));
 
             try {
-                const res = await fetch('/upload', { method: 'POST', body: formData });
+                const res = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
                 if (res.ok) {
                     const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
+                    const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `Archive_${activeFile.name}`;
+                    a.download = `Archive_${file.name}`;
+                    document.body.appendChild(a);
                     a.click();
-                    showStatus('Archival complete. Asset downloaded.', 'success');
+                    window.URL.revokeObjectURL(url);
+                    
+                    status.textContent = "Success! Archive Downloaded.";
+                    status.className = 'status success';
+                    fileInput.value = '';
                 } else {
-                    throw new Error(await res.text());
+                    const errText = await res.text();
+                    status.textContent = "Error: " + errText;
+                    status.className = 'status error';
                 }
             } catch (err) {
-                showStatus('Archival failed: ' + err.message, 'error');
-            } finally {
-                btnArchive.disabled = false;
-                btnArchive.textContent = 'Commit to Archive';
+                status.textContent = "Network Error: " + err.message;
+                status.className = 'status error';
             }
-        };
+        }
     </script>
 </body>
 </html>

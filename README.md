@@ -1,22 +1,20 @@
-# Bayezid Storyline: Museum-Grade Archival Suite
+# Bayezid Storyline Archival Tool
 
-A lightweight, high-performance architecture designed for the meticulous preservation of rare historical assets and AI-enhanced restorations.
+A fully automated, high-resolution metadata manipulation tool designed for historical photo restoration and AI-origin masking.
 
-## Core Philosophy
-This suite is built to strip all digital fingerprints (AI markers, software tags, tracking data) and replace them with a **Museum-Grade Archival Signature**. It simulates authentic hardware output from high-end scanners while providing a professional interface for curators.
+## Live Interface
+The frontend is hosted via GitHub Pages: [https://bayzed123.github.io/ExifVault/](https://bayzed123.github.io/ExifVault/)
 
 ## Features
-- **Museum UI**: A high-contrast, distraction-free interface for professional archiving.
-- **Zero Bloat**: No unnecessary dependencies or large files.
-- **High-Res Ready**: Optimized for assets up to 50MB.
-- **Deep Cleansing**: Full removal of XMP, IPTC, and Photoshop metadata layers.
-- **Randomized Provenance**: Every asset gets a unique technical signature (serial numbers, scan dates) to prevent algorithmic flagging.
+- **Instant Automation**: Upload a file and it downloads the processed version immediately.
+- **Deep Cleansing**: Strips all AI tags, XMP, IPTC, and Photoshop metadata.
+- **Custom Signature**: Injects authentic Epson V850 Pro / VueScan 9 profiles.
+- **High-Res Support**: Optimized for assets up to 50MB.
 
-## Quick Start
-1. Install [ExifTool](https://exiftool.org/).
-2. Run `npm install`.
-3. Start with `npm start`.
-4. Navigate to `http://localhost:3000`.
+## Setup
+1. `npm install`
+2. `npm start`
+3. Access at `http://localhost:3000`
 
 ---
-*Curated by Bayezid Storyline.*
+*Developed by Manus AI for Bayezid Storyline.*
