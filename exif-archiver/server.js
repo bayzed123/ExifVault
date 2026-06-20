@@ -24,6 +24,27 @@ const upload = multer({
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, "public")));
 
+// Helper function to generate random dates within a range
+function getRandomDate(startYear, endYear) {
+  const start = new Date(startYear, 0, 1).getTime();
+  const end = new Date(endYear, 11, 31).getTime();
+  const date = new Date(start + Math.random() * (end - start));
+  
+  // Format for EXIF: YYYY:MM:DD HH:MM:SS
+  const pad = (n) => n.toString().padStart(2, '0');
+  return `${date.getFullYear()}:${pad(date.getMonth() + 1)}:${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+// Helper function to generate random scanner serial numbers
+function getRandomSerialNumber() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 10; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 app.post("/upload", upload.single("image"), (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
@@ -43,16 +64,35 @@ app.post("/upload", upload.single("image"), (req, res) => {
     return res.status(400).send("Invalid custom metadata provided.");
   }
 
-  // ExifTool command to strip metadata and inject custom profile
-  const exiftoolCommand = `exiftool -all= \
-    -EXIF:Make=\"${customMetadata.make}\" \
-    -EXIF:Model=\"${customMetadata.model}\" \
-    -EXIF:Software=\"${customMetadata.software}\" \
-    -EXIF:Artist=\"${customMetadata.artist}\" \
-    -EXIF:Copyright=\"${customMetadata.copyright}\" \
-    -IPTC:By-line=\"${customMetadata.byline}\" \
-    -IPTC:CopyrightNotice=\"${customMetadata.copyrightNotice}\" \
-    -IPTC:ObjectName=\"${customMetadata.objectName}\" \
+  // Randomization logic
+  const scanDate = getRandomDate(2015, 2023); // Random scan date between 2015 and 2023
+  const serialNumber = getRandomSerialNumber();
+  
+  // Escape quotes in user input to prevent command injection
+  const escapeShellArg = (arg) => {
+    if (!arg) return '';
+    return arg.replace(/"/g, '\\"');
+  };
+
+  // Advanced ExifTool command
+  // 1. -all= removes everything
+  // 2. -XMP:all= -IPTC:all= -Photoshop:all= ensures deep cleansing of AI tags
+  // 3. Injects custom profile + randomized technical data + historical tags
+  const exiftoolCommand = `exiftool -all= -XMP:all= -IPTC:all= -Photoshop:all= \
+    -EXIF:Make="${escapeShellArg(customMetadata.make)}" \
+    -EXIF:Model="${escapeShellArg(customMetadata.model)}" \
+    -EXIF:Software="${escapeShellArg(customMetadata.software)}" \
+    -EXIF:Artist="${escapeShellArg(customMetadata.artist)}" \
+    -EXIF:Copyright="${escapeShellArg(customMetadata.copyright)}" \
+    -EXIF:DateTimeOriginal="${scanDate}" \
+    -EXIF:CreateDate="${scanDate}" \
+    -EXIF:ModifyDate="${scanDate}" \
+    -EXIF:SerialNumber="${serialNumber}" \
+    -IPTC:By-line="${escapeShellArg(customMetadata.byline)}" \
+    -IPTC:CopyrightNotice="${escapeShellArg(customMetadata.copyrightNotice)}" \
+    -IPTC:ObjectName="${escapeShellArg(customMetadata.objectName)}" \
+    -IPTC:Caption-Abstract="${escapeShellArg(customMetadata.description)}" \
+    -IPTC:Keywords="${escapeShellArg(customMetadata.keywords)}" \
     -overwrite_original "${originalFilePath}"`;
 
   exec(exiftoolCommand, (error, stdout, stderr) => {

@@ -63,12 +63,14 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        .profile-editor input[type="text"] {
+        .profile-editor input[type="text"],
+        .profile-editor textarea {
             width: calc(100% - 22px);
             padding: 10px;
             margin-bottom: 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            resize: vertical;
         }
         .profile-editor button {
             background-color: #007bff;
@@ -120,6 +122,12 @@
             <label for="objectName">Object Name:</label>
             <input type="text" id="objectName" value="Historical Archive">
 
+            <label for="description">Description (Caption-Abstract):</label>
+            <textarea id="description" rows="3" placeholder="Detailed description of the image content..."></textarea>
+
+            <label for="keywords">Keywords (comma-separated):</label>
+            <input type="text" id="keywords" placeholder="historical, archive, Bayezid, etc.">
+
             <button id="saveProfile">Save Profile</button>
         </div>
     </div>
@@ -132,7 +140,7 @@
 
         const profileFields = [
             "make", "model", "software", "artist", "copyright",
-            "byline", "copyrightNotice", "objectName"
+            "byline", "copyrightNotice", "objectName", "description", "keywords"
         ];
 
         // Load profile from local storage on page load
@@ -142,9 +150,10 @@
 
         function loadProfile() {
             profileFields.forEach(field => {
+                const element = document.getElementById(field);
                 const value = localStorage.getItem(field);
                 if (value) {
-                    document.getElementById(field).value = value;
+                    element.value = value;
                 }
             });
         }
@@ -209,7 +218,7 @@
             const formData = new FormData();
             formData.append("image", file);
 
-            // Get custom metadata from local storage
+            // Get custom metadata from local storage or current input values
             const customMetadata = {};
             profileFields.forEach(field => {
                 customMetadata[field] = localStorage.getItem(field) || document.getElementById(field).value;
