@@ -4,178 +4,296 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bayezid Storyline Archival Tool</title>
+    <title>Bayezid Storyline | Curator's Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
+            --bg: #050505;
+            --card: #0f0f0f;
             --accent: #c9a86a;
-            --bg: #0a0a0a;
-            --card: #141414;
             --text: #e0e0e0;
+            --text-dim: #777;
+            --border: #222;
+            --input-bg: #151515;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: var(--bg);
+            background: var(--bg);
             color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
         }
-        .container {
-            background-color: var(--card);
-            padding: 50px;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            text-align: center;
-            width: 90%;
-            max-width: 650px;
-            border: 1px solid #2a2a2a;
+
+        .dashboard {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
         }
-        h1 {
+
+        @media (max-width: 1000px) { .dashboard { grid-template-columns: 1fr; } }
+
+        /* LEFT COLUMN: UPLOAD & INFO */
+        .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+        .panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 4px;
+        }
+
+        .header h1 {
+            font-family: 'Cinzel', serif;
             color: var(--accent);
-            margin-bottom: 5px;
-            font-size: 2rem;
+            font-size: 1.5rem;
             letter-spacing: 2px;
-            text-transform: uppercase;
+            margin-bottom: 5px;
         }
-        .tagline {
-            color: #666;
-            margin-bottom: 40px;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .drop-area {
-            border: 2px dashed #333;
-            border-radius: 10px;
-            padding: 80px 20px;
+
+        .drop-zone {
+            border: 1px dashed var(--border);
+            padding: 40px 20px;
+            text-align: center;
             cursor: pointer;
             transition: 0.3s;
-            background-color: #0d0d0d;
+            background: #0a0a0a;
+            margin-bottom: 20px;
         }
-        .drop-area:hover, .drop-area.highlight {
-            border-color: var(--accent);
-            background-color: #1a1a1a;
-        }
-        .drop-area p {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #999;
-        }
-        input[type="file"] {
+        .drop-zone:hover { border-color: var(--accent); background: #111; }
+
+        #asset-preview {
+            width: 100%;
+            max-height: 300px;
+            object-fit: contain;
             display: none;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
         }
-        #status {
-            margin-top: 30px;
-            font-weight: 600;
-            font-size: 1rem;
-            height: 24px;
-        }
-        .processing { color: var(--accent); }
-        .success { color: #4caf50; }
-        .error { color: #f44336; }
-        
-        .footer {
-            margin-top: 50px;
-            font-size: 0.75rem;
-            color: #444;
+
+        .asset-info { font-size: 0.8rem; color: var(--text-dim); line-height: 1.8; }
+        .asset-info b { color: var(--accent); }
+
+        /* RIGHT COLUMN: PRESETS & ADVANCED EDITOR */
+        .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+        .presets { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+        .preset-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px 15px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            text-transform: uppercase;
             letter-spacing: 1px;
+            transition: 0.3s;
+        }
+        .preset-btn:hover, .preset-btn.active { border-color: var(--accent); color: var(--accent); }
+
+        .tag-editor {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .tag-editor::-webkit-scrollbar { width: 4px; }
+        .tag-editor::-webkit-scrollbar-thumb { background: var(--border); }
+
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; }
+        .input-group input {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            padding: 10px;
+            color: var(--text);
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .input-group input:focus { border-color: var(--accent); }
+
+        .btn-archive {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn-archive:hover { background: #dcb97a; transform: translateY(-2px); }
+        .btn-archive:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+        #status {
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 15px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Bayezid Storyline</h1>
-        <div class="tagline">Automated High-Res Archival Suite</div>
-        
-        <div class="drop-area" id="drop-area">
-            <p>DEPOSIT ASSET FOR INSTANT ARCHIVAL</p>
-            <span style="font-size: 0.7rem; color: #555; display: block; margin-top: 10px;">JPG, PNG, WEBP UP TO 50MB</span>
-            <input type="file" id="fileInput" accept="image/*">
+    <div class="dashboard">
+        <!-- LEFT: UPLOAD & INFO -->
+        <div class="left-col">
+            <div class="panel header">
+                <h1>BAYEZID STORYLINE</h1>
+                <p style="font-size: 0.7rem; color: var(--text-dim); letter-spacing: 1px;">CURATOR'S DASHBOARD V3.0</p>
+            </div>
+
+            <div class="panel">
+                <div class="drop-zone" id="drop-zone">
+                    <p style="font-size: 0.9rem; color: #888;">DEPOSIT HIGH-RES ASSET</p>
+                    <input type="file" id="file-input" style="display: none;" accept="image/*">
+                </div>
+                <img id="asset-preview" src="" alt="Preview">
+                <div class="asset-info" id="asset-info">
+                    Select an asset to view technical data...
+                </div>
+            </div>
         </div>
-        
-        <div id="status"></div>
-    </div>
-    
-    <div class="footer">
-        PROFESSIONAL GRADE METADATA MANIPULATION
+
+        <!-- RIGHT: PRESETS & EDITOR -->
+        <div class="right-col">
+            <div class="panel">
+                <h2 style="font-size: 0.8rem; color: var(--accent); margin-bottom: 15px; letter-spacing: 2px;">ARCHIVAL PRESETS</h2>
+                <div class="presets">
+                    <button class="preset-btn" onclick="applyPreset('historical')">Historical Archive</button>
+                    <button class="preset-btn" onclick="applyPreset('ai_mask')">AI Origin Mask</button>
+                    <button class="preset-btn" onclick="applyPreset('restoration')">Photo Restoration</button>
+                </div>
+
+                <h2 style="font-size: 0.8rem; color: var(--accent); margin-bottom: 15px; letter-spacing: 2px; border-top: 1px solid var(--border); padding-top: 15px;">ADVANCED TAG EDITOR</h2>
+                <div class="tag-editor" id="tag-editor">
+                    <!-- Dynamic Tag Inputs -->
+                </div>
+
+                <button class="btn-archive" id="btn-archive" disabled>COMMIT TO ARCHIVE</button>
+                <div id="status"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const dropArea = document.getElementById('drop-area');
-        const fileInput = document.getElementById('fileInput');
+        const tags = [
+            "Make", "Model", "Artist", "Software", "Copyright", "By-line", "CopyrightNotice", "ObjectName",
+            "Caption-Abstract", "Keywords", "FileName", "FileSize", "FileType", "FileTypeExtension", "MIMEType",
+            "ImageWidth", "ImageHeight", "BitDepth", "ColorType", "Compression", "Filter", "Interlace",
+            "JUMDType", "JUMDLabel", "C2PAIconSalt", "C2PAIconType", "C2PAIconData", "C2PAActionsV2Salt",
+            "ActionsAction", "ActionsWhen", "ActionsSoftwareAgentName", "ActionsSoftwareAgentVersion",
+            "ActionsDigitalSourceType", "C2PACertificate-statusSalt", "OcspVals", "C2PAHashDataSalt",
+            "ExclusionsStart", "ExclusionsLength", "Name", "Alg", "Hash", "Pad", "InstanceID",
+            "Claim_Generator_InfoName", "Claim_Generator_InfoIconUrl", "Claim_Generator_InfoIconHash",
+            "Claim_Generator_InfoSpecVersion", "Claim_Generator_InfoOrgContentauthC2Pa_Rs", "Signature",
+            "Created_AssertionsUrl", "Created_AssertionsHash", "Title", "Category", "raw_header"
+        ];
+
+        const editor = document.getElementById('tag-editor');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const preview = document.getElementById('asset-preview');
+        const info = document.getElementById('asset-info');
+        const btnArchive = document.getElementById('btn-archive');
         const status = document.getElementById('status');
 
-        dropArea.onclick = () => fileInput.click();
+        let activeFile = null;
 
-        fileInput.onchange = (e) => handleFiles(e.target.files);
+        // Initialize Editor
+        tags.forEach(tag => {
+            const group = document.createElement('div');
+            group.className = 'input-group';
+            group.innerHTML = `<label>${tag.replace(/_/g, ' ')}</label><input type="text" id="tag-${tag}" placeholder="Auto-generated...">`;
+            editor.appendChild(group);
+        });
 
-        dropArea.ondragover = (e) => {
-            e.preventDefault();
-            dropArea.classList.add('highlight');
-        };
+        function applyPreset(type) {
+            const defaults = {
+                historical: { Make: "Epson", Model: "Perfection V850 Pro", Artist: "Bayezid Storyline", ObjectName: "Historical Archive" },
+                ai_mask: { Software: "VueScan 9", Artist: "Bayezid Storyline", Copyright: "© 2026 Bayezid Storyline" },
+                restoration: { Caption_Abstract: "Restored by Bayezid Storyline", Keywords: "restored, historical, rare" }
+            };
+            const p = defaults[type];
+            for (let k in p) {
+                const el = document.getElementById(`tag-${k.replace(/-/g, '_')}`);
+                if (el) el.value = p[k];
+            }
+        }
 
-        dropArea.ondragleave = () => {
-            dropArea.classList.remove('highlight');
-        };
+        dropZone.onclick = () => fileInput.click();
+        fileInput.onchange = e => handleFile(e.target.files[0]);
 
-        dropArea.ondrop = (e) => {
-            e.preventDefault();
-            dropArea.classList.remove('highlight');
-            handleFiles(e.dataTransfer.files);
-        };
+        function handleFile(file) {
+            if (!file) return;
+            activeFile = file;
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                btnArchive.disabled = false;
+                
+                // Show Basic Info
+                info.innerHTML = `
+                    <b>FILENAME:</b> ${file.name}<br>
+                    <b>SIZE:</b> ${(file.size / 1024 / 1024).toFixed(2)} MB<br>
+                    <b>TYPE:</b> ${file.type}<br>
+                    <b>LAST MODIFIED:</b> ${new Date(file.lastModified).toLocaleString()}
+                `;
 
-        async function handleFiles(files) {
-            if (files.length === 0) return;
-            const file = files[0];
-            
-            status.textContent = `COMMITTING ${file.name.toUpperCase()} TO ARCHIVE...`;
-            status.className = 'processing';
+                // Auto-fill some tags
+                document.getElementById('tag-FileName').value = file.name;
+                document.getElementById('tag-FileSize').value = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                document.getElementById('tag-MIMEType').value = file.type;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        btnArchive.onclick = async () => {
+            btnArchive.disabled = true;
+            status.textContent = "COMMITTING ARCHIVAL SIGNATURE...";
+            status.style.color = "var(--accent)";
 
             const formData = new FormData();
-            formData.append('image', file);
+            formData.append('image', activeFile);
             
-            // Hardcoded Bayezid Signature
-            const meta = {
-                make: "Epson",
-                model: "Perfection V850 Pro",
-                artist: "Bayezid Storyline",
-                description: "Historical Archive Restoration",
-                keywords: "history, archive, rare"
-            };
+            const meta = {};
+            tags.forEach(tag => {
+                const val = document.getElementById(`tag-${tag}`).value;
+                if (val) meta[tag] = val;
+            });
             formData.append('customMetadata', JSON.stringify(meta));
 
             try {
-                const res = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const res = await fetch('/upload', { method: 'POST', body: formData });
                 if (res.ok) {
                     const blob = await res.blob();
-                    const url = window.URL.createObjectURL(blob);
+                    const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `Archive_${file.name}`;
-                    document.body.appendChild(a);
+                    a.download = `Archive_${activeFile.name}`;
                     a.click();
-                    window.URL.revokeObjectURL(url);
-                    
-                    status.textContent = "ARCHIVAL COMPLETE. DOWNLOAD INITIATED.";
-                    status.className = 'success';
-                    fileInput.value = '';
+                    status.textContent = "SUCCESS. ASSET ARCHIVED.";
+                    status.style.color = "#4caf50";
                 } else {
-                    const errText = await res.text();
-                    status.textContent = "ARCHIVAL ERROR: " + errText;
-                    status.className = 'error';
+                    throw new Error(await res.text());
                 }
             } catch (err) {
-                status.textContent = "CONNECTION ERROR: " + err.message;
-                status.className = 'error';
+                status.textContent = "ERROR: " + err.message;
+                status.style.color = "#f44336";
+            } finally {
+                btnArchive.disabled = false;
             }
-        }
+        };
     </script>
 </body>
 </html>
