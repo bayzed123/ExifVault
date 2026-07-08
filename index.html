@@ -85,14 +85,37 @@
             border: 1px solid var(--border);
         }
 
+        /* Profile Selector */
+        .profile-selector-container {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #111;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+        .profile-selector-container label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        .profile-selector-container select {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            padding: 12px;
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            cursor: pointer;
+        }
+
         /* Accordion */
-        .accordion {
-            margin-top: 20px;
-            display: none;
-        }
-        .accordion-item {
-            border-bottom: 1px solid var(--border);
-        }
+        .accordion { display: none; margin-top: 20px; }
+        .accordion-item { border-bottom: 1px solid var(--border); }
         .accordion-header {
             padding: 15px 0;
             cursor: pointer;
@@ -132,71 +155,20 @@
         .input-group input:focus { border-color: var(--accent); }
 
         /* Buttons */
-        .action-bar {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 30px;
-        }
-        .btn {
-            padding: 18px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: 0.3s;
-            border: none;
-            font-family: 'Inter', sans-serif;
-        }
+        .action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .btn { padding: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border: none; }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-primary:hover { background: #dcb97a; }
         .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
-        .btn:disabled { background: #222; color: #555; cursor: not-allowed; border: none; }
 
-        #status {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: 600;
-            min-height: 1.2em;
-        }
-
-        .utility-btns {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .util-btn {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-            padding: 5px 12px;
-            font-size: 0.6rem;
-            cursor: pointer;
-        }
+        #status { margin-top: 20px; text-align: center; font-size: 0.85rem; font-weight: 600; min-height: 1.2em; }
+        .utility-btns { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        .util-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 5px 12px; font-size: 0.6rem; cursor: pointer; }
         .util-btn:hover { color: var(--accent); border-color: var(--accent); }
 
-        #download-area {
-            display: none;
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            border: 1px solid var(--success);
-            background: rgba(76, 175, 80, 0.05);
-        }
-        .btn-download {
-            background: var(--success);
-            color: white;
-            padding: 15px 30px;
-            text-decoration: none;
-            display: inline-block;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-radius: 4px;
-        }
+        #download-area { display: none; text-align: center; margin-top: 30px; padding: 20px; border: 1px solid var(--success); background: rgba(76, 175, 80, 0.05); }
+        .btn-download { background: var(--success); color: white; padding: 15px 30px; text-decoration: none; display: inline-block; font-weight: 700; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -224,23 +196,29 @@
             </div>
 
             <div id="editor-ui" style="display: none;">
+                
+                <div class="profile-selector-container">
+                    <label>Hardware Profile Override</label>
+                    <select id="device-profile">
+                        <option value="epson">Legacy Archive: Epson Perfection V850 Pro</option>
+                        <option value="iphone16">Mobile Capture: Apple iPhone 16 Pro</option>
+                        <option value="iphone13">Mobile Capture: Apple iPhone 13 Pro</option>
+                    </select>
+                </div>
+
                 <div class="accordion" id="accordion" style="display: block;">
-                    <!-- Camera Info -->
                     <div class="accordion-item active">
                         <div class="accordion-header">Camera Information <span>+</span></div>
                         <div class="accordion-content" id="section-camera"></div>
                     </div>
-                    <!-- Image Settings -->
                     <div class="accordion-item">
                         <div class="accordion-header">Image Settings <span>+</span></div>
                         <div class="accordion-content" id="section-settings"></div>
                     </div>
-                    <!-- GPS Data -->
                     <div class="accordion-item">
                         <div class="accordion-header">GPS Location <span>+</span></div>
                         <div class="accordion-content" id="section-gps"></div>
                     </div>
-                    <!-- Author & Copyright -->
                     <div class="accordion-item">
                         <div class="accordion-header">Author & Copyright <span>+</span></div>
                         <div class="accordion-content" id="section-author"></div>
@@ -270,79 +248,95 @@
         const editorUI = document.getElementById('editor-ui');
         const downloadArea = document.getElementById('download-area');
         const downloadLink = document.getElementById('download-link');
+        const deviceProfileSelect = document.getElementById('device-profile');
 
         let currentTempFile = null;
         let originalName = null;
         let dynamicProps = {};
 
-        const payloadSchema = {
-            camera: {
-                "EXIF:Make": "Epson",
-                "EXIF:Model": "Perfection V850 Pro",
-                "EXIF:LensModel": "Standard Flatbed Lens",
-                "EXIF:LensMake": "Epson",
-                "EXIF:SerialNumber": "V850-994821",
-                "EXIF:InternalSerialNumber": "994821",
-                "EXIF:Software": "VueScan 9",
-                "EXIF:FirmwareVersion": "1.04"
+        // Base Schemas for different devices
+        const deviceSchemas = {
+            epson: {
+                camera: {
+                    "EXIF:Make": "Epson",
+                    "EXIF:Model": "Perfection V850 Pro",
+                    "EXIF:LensModel": "Standard Flatbed Lens",
+                    "EXIF:LensMake": "Epson",
+                    "EXIF:SerialNumber": "V850-994821",
+                    "EXIF:Software": "VueScan 9"
+                },
+                settings: {
+                    "EXIF:FNumber": "8.0",
+                    "EXIF:ISO": "100",
+                    "EXIF:FocalLength": "50mm",
+                    "EXIF:FocalLengthIn35mmFormat": "50mm",
+                    "EXIF:ShutterSpeedValue": "1/125",
+                    "EXIF:ApertureValue": "8.0"
+                }
             },
-            settings: {
-                "EXIF:Orientation": "Horizontal (normal)",
-                "EXIF:ExposureTime": "1/125",
-                "EXIF:FNumber": "8.0",
-                "EXIF:ISO": "100",
-                "EXIF:FocalLength": "50mm",
-                "EXIF:FocalLengthIn35mmFormat": "50mm",
-                "EXIF:Flash": "Off, Did not fire",
-                "EXIF:WhiteBalance": "Manual",
-                "EXIF:ExposureProgram": "Manual",
-                "EXIF:ExposureMode": "Manual",
-                "EXIF:ExposureBiasValue": "0",
-                "EXIF:MeteringMode": "Center-weighted average",
-                "EXIF:ShutterSpeedValue": "1/125",
-                "EXIF:ApertureValue": "8.0",
-                "EXIF:MaxApertureValue": "2.8",
-                "EXIF:BrightnessValue": "0",
-                "EXIF:SceneCaptureType": "Standard",
-                "EXIF:SceneType": "Directly photographed",
-                "EXIF:GainControl": "None",
-                "EXIF:Contrast": "Normal",
-                "EXIF:Saturation": "Normal",
-                "EXIF:Sharpness": "Normal",
-                "EXIF:LightSource": "Unknown",
-                "EXIF:DigitalZoomRatio": "1"
+            iphone16: {
+                camera: {
+                    "EXIF:Make": "Apple",
+                    "EXIF:Model": "iPhone 16 Pro",
+                    "EXIF:LensModel": "iPhone 16 Pro back camera 6.86mm f/1.78",
+                    "EXIF:LensMake": "Apple",
+                    "EXIF:SerialNumber": "F17N3820QW",
+                    "EXIF:Software": "iOS 18.0"
+                },
+                settings: {
+                    "EXIF:FNumber": "1.78",
+                    "EXIF:ISO": "80",
+                    "EXIF:FocalLength": "6.86mm",
+                    "EXIF:FocalLengthIn35mmFormat": "24mm",
+                    "EXIF:ShutterSpeedValue": "1/100",
+                    "EXIF:ApertureValue": "1.78"
+                }
             },
+            iphone13: {
+                camera: {
+                    "EXIF:Make": "Apple",
+                    "EXIF:Model": "iPhone 13 Pro",
+                    "EXIF:LensModel": "iPhone 13 Pro back triple camera 5.7mm f/1.5",
+                    "EXIF:LensMake": "Apple",
+                    "EXIF:SerialNumber": "C39G7843KL",
+                    "EXIF:Software": "iOS 17.5"
+                },
+                settings: {
+                    "EXIF:FNumber": "1.5",
+                    "EXIF:ISO": "50",
+                    "EXIF:FocalLength": "5.7mm",
+                    "EXIF:FocalLengthIn35mmFormat": "26mm",
+                    "EXIF:ShutterSpeedValue": "1/120",
+                    "EXIF:ApertureValue": "1.5"
+                }
+            }
+        };
+
+        let currentPayload = {
+            camera: { ...deviceSchemas.epson.camera },
+            settings: { ...deviceSchemas.epson.settings, "EXIF:Orientation": "Horizontal (normal)", "EXIF:Flash": "Off, Did not fire", "EXIF:WhiteBalance": "Auto", "EXIF:ExposureProgram": "Normal", "EXIF:ExposureMode": "Auto" },
             gps: {
                 "GPS:GPSLatitude": "24.2513",
                 "GPS:GPSLongitude": "89.9167",
                 "GPS:GPSAltitude": "14",
                 "GPS:GPSLatitudeRef": "N",
-                "GPS:GPSLongitudeRef": "E",
-                "GPS:GPSAltitudeRef": "Above Sea Level",
-                "GPS:GPSSpeed": "0",
-                "GPS:GPSSpeedRef": "km/h",
-                "GPS:GPSImgDirection": "0",
-                "GPS:GPSImgDirectionRef": "True North",
-                "GPS:GPSDestBearing": "0",
-                "GPS:GPSDestBearingRef": "True North"
+                "GPS:GPSLongitudeRef": "E"
             },
             author: {
                 "EXIF:DateTimeOriginal": "1971:12:11 12:00:00",
                 "EXIF:CreateDate": "1971:12:11 12:00:00",
                 "EXIF:Artist": "Bayezid Storyline",
                 "EXIF:Copyright": "© 2026 Bayezid Storyline",
-                "EXIF:ImageDescription": "Historical Archive Restoration",
-                "EXIF:UserComment": "Digitized and restored by Bayezid Storyline. All rights reserved."
+                "EXIF:ImageDescription": "Historical Archive Restoration"
             }
         };
 
-        // Initialize UI
         function buildForm() {
             const sections = {
-                'section-camera': payloadSchema.camera,
-                'section-settings': payloadSchema.settings,
-                'section-gps': payloadSchema.gps,
-                'section-author': payloadSchema.author
+                'section-camera': currentPayload.camera,
+                'section-settings': currentPayload.settings,
+                'section-gps': currentPayload.gps,
+                'section-author': currentPayload.author
             };
 
             for (const [id, data] of Object.entries(sections)) {
@@ -359,6 +353,16 @@
         }
 
         buildForm();
+
+        // Switch device profiles on dropdown change
+        deviceProfileSelect.addEventListener('change', (e) => {
+            const selected = e.target.value;
+            currentPayload.camera = { ...deviceSchemas[selected].camera };
+            
+            // Merge device specific settings with base settings
+            currentPayload.settings = { ...currentPayload.settings, ...deviceSchemas[selected].settings };
+            buildForm();
+        });
 
         // Accordion Logic
         document.querySelectorAll('.accordion-header').forEach(header => {
@@ -389,7 +393,6 @@
                 currentTempFile = data.tempFile;
                 dynamicProps = data.dynamicMetadata;
 
-                // Show Preview
                 const reader = new FileReader();
                 reader.onload = e => {
                     preview.src = e.target.result;
@@ -400,16 +403,6 @@
                 status.textContent = "PHASE 2: DYNAMIC ANALYSIS COMPLETE.";
                 status.style.color = "var(--success)";
                 editorUI.style.display = 'block';
-
-                // Update date fields
-                const now = new Date();
-                const ts = now.toISOString().replace(/T/, ' ').replace(/\..+/, '').replace(/-/g, ':');
-                document.querySelector('[data-key="GPS:GPSDateStamp"]')?.setAttribute('value', ts.split(' ')[0]);
-                // We'll just update some defaults manually
-                const modifyDate = document.createElement('div');
-                modifyDate.className = 'input-group';
-                modifyDate.innerHTML = `<label>Modify Date</label><input type="text" data-key="EXIF:ModifyDate" value="${ts}">`;
-                document.getElementById('section-author').appendChild(modifyDate);
 
             } catch (err) {
                 status.textContent = "ERROR: " + err.message;
@@ -422,20 +415,17 @@
             status.style.color = "var(--accent)";
             
             const metadata = {};
-            
-            // Add all form fields
             document.querySelectorAll('#editor-ui input').forEach(input => {
                 metadata[input.dataset.key] = input.value;
             });
 
-            // Add dynamic properties that MUST be preserved
             const preservedKeys = [
                 "ImageWidth", "ImageHeight", "BitsPerSample", "SamplesPerPixel", "ColorSpace", 
                 "Compression", "PhotometricInterpretation", "YCbCrPositioning", "PlanarConfiguration", 
                 "ComponentsConfiguration", "CompressedBitsPerPixel"
             ];
             preservedKeys.forEach(k => {
-                if (dynamicProps[k]) metadata[`EXIF:${k}`] = dynamicProps[k];
+                if (dynamicProps && dynamicProps[k]) metadata[`EXIF:${k}`] = dynamicProps[k];
             });
 
             try {
@@ -456,9 +446,7 @@
                 status.textContent = "ASSET REBUILT PERFECTLY.";
                 status.style.color = "var(--success)";
                 
-                if (isAuto) {
-                    downloadLink.click();
-                }
+                if (isAuto) downloadLink.click();
             } catch (err) {
                 status.textContent = "ERROR: " + err.message;
                 status.style.color = "#f44336";
