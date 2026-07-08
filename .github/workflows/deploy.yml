@@ -39,7 +39,7 @@ jobs:
       run: |
         node -v
         pnpm -v
-        exiftool -version
+        exiftool -ver
         
     - name: Build Log
       run: |
