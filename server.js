@@ -4,15 +4,28 @@ const sharp = require("sharp");
 const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+const sqlite3 = require("sqlite3").verbose();
 
 const app = express();
 const port = 3000;
 
-// Ensure directories exist
+// Directories
 const uploadDir = path.join(__dirname, "uploads");
 const outputDir = path.join(__dirname, "outputs");
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
 if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+
+// Database Setup
+const db = new sqlite3.Database(path.join(__dirname, "archiver.db"));
+db.serialize(() => {
+  db.run(`CREATE TABLE IF NOT EXISTS records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT,
+    temp_path TEXT,
+    output_path TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+});
 
 const upload = multer({
   dest: "uploads/",
@@ -32,18 +45,14 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
   const alteredPath = inputPath + "_altered.jpg";
 
   try {
-    // Phase 1: Watermark Disruption (Pixel Lattice Alteration)
-    // 1% dimension resize or 1px crop + 98% quality re-compression
     const image = sharp(inputPath);
     const metadata = await image.metadata();
     
-    // Apply 1px crop to disrupt lattice
     await image
       .extract({ left: 0, top: 0, width: metadata.width - 1, height: metadata.height - 1 })
       .jpeg({ quality: 98 })
       .toFile(alteredPath);
 
-    // Phase 2: Dynamic Analysis
     exec(`exiftool -json "${alteredPath}"`, (err, stdout) => {
       if (err) {
         console.error("ExifTool Analysis Error:", err);
@@ -57,7 +66,6 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
         dynamicMetadata: exifData
       });
       
-      // Cleanup original upload
       if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
     });
   } catch (err) {
@@ -73,25 +81,19 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
 app.post("/process", async (req, res) => {
   const { tempFile, metadata, originalName } = req.body;
   const inputPath = path.join(uploadDir, tempFile);
-  const outputPath = path.join(outputDir, "processed_" + tempFile);
+  const outputFilename = "processed_" + tempFile;
+  const outputPath = path.join(outputDir, outputFilename);
 
   if (!fs.existsSync(inputPath)) {
     return res.status(404).send("Temporary file not found.");
   }
 
-  const escape = (s) => {
-    if (typeof s !== 'string') s = String(s);
-    return s.replace(/"/g, '\\"');
-  };
+  const escape = (s) => String(s || "").replace(/"/g, '\\"');
 
-  // Build ExifTool command
-  // 1. Destructive sweep (-all=)
-  // 2. Inject new payload
   let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all=", "--trailer:all", "-MakerNotes:all=", "-PreviewImage=", "-ThumbnailImage="];
 
   for (let [key, value] of Object.entries(metadata)) {
     if (value !== undefined && value !== null && value !== "") {
-      // Handle GPS specifically if needed, but here we assume keys are formatted for ExifTool
       exifArgs.push(`-${key}="${escape(value)}"`);
     }
   }
@@ -104,28 +106,63 @@ app.post("/process", async (req, res) => {
       return res.status(500).send("Metadata Injection Error.");
     }
 
-    res.json({
-      downloadUrl: `/download/${path.basename(outputPath)}`,
-      fileName: `Archive_${originalName || 'image.jpg'}`
+    // Save record to DB
+    db.run(`INSERT INTO records (filename, temp_path, output_path) VALUES (?, ?, ?)`, 
+      [originalName, inputPath, outputPath], function(err) {
+        if (err) console.error("DB Error:", err);
     });
 
-    // Cleanup altered temp file
-    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    res.json({
+      downloadUrl: `/download/${outputFilename}`,
+      fileName: `Archive_${originalName || 'image.jpg'}`
+    });
   });
 });
 
 app.get("/download/:filename", (req, res) => {
   const filePath = path.join(outputDir, req.params.filename);
   if (fs.existsSync(filePath)) {
-    res.download(filePath, (err) => {
-      if (!err) {
-        // Cleanup after download
+    res.download(filePath);
+  } else {
+    res.status(404).send("File not found or already deleted.");
+  }
+});
+
+/**
+ * AUTO-CLEANUP SYSTEM
+ * Runs every 5 minutes, deletes files older than 30 minutes
+ */
+setInterval(() => {
+  const expiryTime = 30 * 60 * 1000; // 30 minutes
+  const now = Date.now();
+
+  db.all(`SELECT * FROM records WHERE (julianday('now') - julianday(created_at)) * 24 * 60 > 30`, (err, rows) => {
+    if (err) return console.error("Cleanup Query Error:", err);
+
+    rows.forEach(row => {
+      // Delete Files
+      if (fs.existsSync(row.temp_path)) fs.unlinkSync(row.temp_path);
+      if (fs.existsSync(row.output_path)) fs.unlinkSync(row.output_path);
+      
+      // Delete DB Record
+      db.run(`DELETE FROM records WHERE id = ?`, [row.id]);
+      console.log(`[Cleanup] Deleted expired asset: ${row.filename}`);
+    });
+  });
+
+  // Also clean up any stray files in uploads/outputs not in DB older than 1 hour
+  const cleanupStray = (dir) => {
+    fs.readdirSync(dir).forEach(file => {
+      const filePath = path.join(dir, file);
+      const stats = fs.statSync(filePath);
+      if (now - stats.mtimeMs > 60 * 60 * 1000) {
         fs.unlinkSync(filePath);
       }
     });
-  } else {
-    res.status(404).send("File not found.");
-  }
-});
+  };
+  cleanupStray(uploadDir);
+  cleanupStray(outputDir);
+
+}, 5 * 60 * 1000);
 
 app.listen(port, () => console.log(`Storyline Archiver Engine active on port ${port}`));
