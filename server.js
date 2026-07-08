@@ -5,7 +5,7 @@ const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 const sqlite3 = require("sqlite3").verbose();
-const manusApiKey = process.env.METADATAINJECTOR;
+
 
 const app = express();
 const port = 3000;
