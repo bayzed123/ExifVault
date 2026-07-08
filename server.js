@@ -173,15 +173,23 @@ app.post("/process", async (req, res) => {
     // Use an argument file for exiftool to prevent command injection and handle long arguments
     const argFile = path.join(uploadDir, `args_${Date.now()}_${tempFile}.txt`);
     let argContent = [
-      "-all=",
-      "-XMP:all=",
-      "-IPTC:all=",
-      "-Photoshop:all=",
-      "--trailer:all",
-      "-MakerNotes:all=",
-      "-PreviewImage=",
-      "-ThumbnailImage="
-    ];
+  "-all=",
+  "-XMP:all=",
+  "-IPTC:all=",
+  "-Photoshop:all=",
+  "--trailer:all=",
+  "-MakerNotes:all=",
+  "-PreviewImage=",
+  "-ThumbnailImage=",
+  "-make=Apple",
+  "-model=iPhone 16 Pro",
+  "-artist=Sayad Md Bayezid Hosan",
+  "-copyright=2026 Bayezid Storyline",
+  "-ImageDescription=Historical Archive Restoration",
+  "-Software=ExifVault Pro v1.0",
+  "-overwrite_original",
+  "-preserve"
+];
 
     for (let [key, value] of Object.entries(metadata)) {
       if (value !== undefined && value !== null && value !== "") {
