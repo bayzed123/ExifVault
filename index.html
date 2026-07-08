@@ -73,6 +73,7 @@
         }
         .drop-zone:hover { border-color: var(--accent); background: #111; }
         .drop-zone p { font-size: 1rem; color: #888; letter-spacing: 1px; }
+        .drop-zone.dragover { border-color: var(--accent); background: #111; }
 
         #preview-container {
             display: none;
@@ -156,19 +157,35 @@
 
         /* Buttons */
         .action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .btn { padding: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border: none; }
+        .btn { padding: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; border: none; border-radius: 4px; }
         .btn-primary { background: var(--accent); color: #000; }
         .btn-primary:hover { background: #dcb97a; }
+        .btn-primary:disabled { background: #666; cursor: not-allowed; }
         .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-secondary:disabled { border-color: #444; color: #444; cursor: not-allowed; }
 
         #status { margin-top: 20px; text-align: center; font-size: 0.85rem; font-weight: 600; min-height: 1.2em; }
-        .utility-btns { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
-        .util-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 5px 12px; font-size: 0.6rem; cursor: pointer; }
+        .utility-btns { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .util-btn { background: transparent; border: 1px solid var(--border); color: var(--text-dim); padding: 8px 15px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; transition: 0.3s; }
         .util-btn:hover { color: var(--accent); border-color: var(--accent); }
+        .util-btn:disabled { border-color: #444; color: #444; cursor: not-allowed; }
 
-        #download-area { display: none; text-align: center; margin-top: 30px; padding: 20px; border: 1px solid var(--success); background: rgba(76, 175, 80, 0.05); }
-        .btn-download { background: var(--success); color: white; padding: 15px 30px; text-decoration: none; display: inline-block; font-weight: 700; border-radius: 4px; }
+        #download-area { display: none; text-align: center; margin-top: 30px; padding: 20px; border: 1px solid var(--success); background: rgba(76, 175, 80, 0.05); border-radius: 4px; }
+        .btn-download { background: var(--success); color: white; padding: 15px 30px; text-decoration: none; display: inline-block; font-weight: 700; border-radius: 4px; transition: 0.3s; }
+        .btn-download:hover { background: #45a049; }
+
+        .supported-formats {
+            margin-top: 15px;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .error { color: #f44336; }
+        .success { color: var(--success); }
+        .info { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -181,7 +198,8 @@
         <div class="panel">
             <div class="drop-zone" id="drop-zone">
                 <p id="drop-text">DEPOSIT ASSET TO BEGIN ANALYSIS</p>
-                <input type="file" id="file-input" style="display: none;" accept="image/jpeg,image/png,image/webp">
+                <input type="file" id="file-input" style="display: none;" accept="image/*">
+                <div class="supported-formats">Supported: JPEG, PNG, WebP, BMP, GIF, TIFF, ICO, and more</div>
             </div>
 
             <div id="preview-container">
@@ -226,9 +244,9 @@
                 </div>
 
                 <div class="utility-btns">
-                    <button class="util-btn" onclick="exportMeta('txt')">EXPORT TXT</button>
-                    <button class="util-btn" onclick="exportMeta('csv')">EXPORT CSV</button>
-                    <button class="util-btn" onclick="exportMeta('json')">EXPORT JSON</button>
+                    <button class="util-btn" id="btn-export-txt" onclick="exportMeta('txt')">EXPORT TXT</button>
+                    <button class="util-btn" id="btn-export-csv" onclick="exportMeta('csv')">EXPORT CSV</button>
+                    <button class="util-btn" id="btn-export-json" onclick="exportMeta('json')">EXPORT JSON</button>
                 </div>
 
                 <div class="action-bar">
@@ -253,6 +271,7 @@
         let currentTempFile = null;
         let originalName = null;
         let dynamicProps = {};
+        let isProcessing = false;
 
         // Base Schemas for different devices
         const deviceSchemas = {
@@ -372,22 +391,90 @@
             };
         });
 
+        // Drag and Drop Support
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleUpload(files[0]);
+            }
+        });
+
         dropZone.onclick = () => fileInput.click();
         fileInput.onchange = e => handleUpload(e.target.files[0]);
 
+        function isValidImageFile(file) {
+            const validMimeTypes = [
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'image/bmp',
+                'image/gif',
+                'image/tiff',
+                'image/x-tiff',
+                'image/x-icon',
+                'image/vnd.microsoft.icon',
+                'image/svg+xml'
+            ];
+            
+            const validExtensions = [
+                '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.tiff', '.tif', '.ico', '.svg'
+            ];
+
+            // Check MIME type
+            if (validMimeTypes.includes(file.type)) {
+                return true;
+            }
+
+            // Check file extension as fallback
+            const fileName = file.name.toLowerCase();
+            return validExtensions.some(ext => fileName.endsWith(ext));
+        }
+
         async function handleUpload(file) {
             if (!file) return;
+
+            // Validate file
+            if (!isValidImageFile(file)) {
+                status.textContent = "ERROR: Invalid file format. Please upload an image file (JPEG, PNG, WebP, BMP, GIF, TIFF, ICO, SVG).";
+                status.className = 'error';
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) {
+                status.textContent = "ERROR: File size exceeds 50MB limit.";
+                status.className = 'error';
+                return;
+            }
+
             originalName = file.name;
             downloadArea.style.display = 'none';
             editorUI.style.display = 'none';
             status.textContent = "PHASE 1: DISRUPTING PIXEL LATTICE...";
-            status.style.color = "var(--accent)";
+            status.className = 'info';
+            isProcessing = true;
 
             const formData = new FormData();
             formData.append('image', file);
 
             try {
                 const res = await fetch('/analyze', { method: 'POST', body: formData });
+                
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || `Server error: ${res.status}`);
+                }
+
                 const data = await res.json();
                 
                 currentTempFile = data.tempFile;
@@ -401,18 +488,27 @@
                 reader.readAsDataURL(file);
 
                 status.textContent = "PHASE 2: DYNAMIC ANALYSIS COMPLETE.";
-                status.style.color = "var(--success)";
+                status.className = 'success';
                 editorUI.style.display = 'block';
+                isProcessing = false;
 
             } catch (err) {
                 status.textContent = "ERROR: " + err.message;
-                status.style.color = "#f44336";
+                status.className = 'error';
+                isProcessing = false;
             }
         }
 
         async function processImage(isAuto) {
+            if (isProcessing) return;
+            
             status.textContent = "PHASE 3: INJECTING ARCHIVAL METADATA...";
-            status.style.color = "var(--accent)";
+            status.className = 'info';
+            isProcessing = true;
+            
+            // Disable buttons during processing
+            document.getElementById('btn-auto').disabled = true;
+            document.getElementById('btn-process').disabled = true;
             
             const metadata = {};
             document.querySelectorAll('#editor-ui input').forEach(input => {
@@ -438,6 +534,12 @@
                         originalName: originalName
                     })
                 });
+
+                if (!res.ok) {
+                    const errorText = await res.text();
+                    throw new Error(errorText || `Server error: ${res.status}`);
+                }
+
                 const data = await res.json();
 
                 downloadLink.href = data.downloadUrl;
@@ -446,12 +548,16 @@
                 downloadLink.download = safeFileName;
                 downloadArea.style.display = 'block';
                 status.textContent = "ASSET REBUILT PERFECTLY.";
-                status.style.color = "var(--success)";
+                status.className = 'success';
                 
                 if (isAuto) downloadLink.click();
             } catch (err) {
                 status.textContent = "ERROR: " + err.message;
-                status.style.color = "#f44336";
+                status.className = 'error';
+            } finally {
+                isProcessing = false;
+                document.getElementById('btn-auto').disabled = false;
+                document.getElementById('btn-process').disabled = false;
             }
         }
 
@@ -466,12 +572,13 @@
             
             let content = "";
             let mime = "text/plain";
+            let fileName = `metadata_export.${format}`;
             
             if (format === 'json') {
                 content = JSON.stringify(metadata, null, 2);
                 mime = "application/json";
             } else if (format === 'csv') {
-                content = "Tag,Value\n" + Object.entries(metadata).map(e => `${e[0]},"${e[1]}"`).join("\n");
+                content = "Tag,Value\n" + Object.entries(metadata).map(e => `"${e[0]}","${e[1]}"`).join("\n");
                 mime = "text/csv";
             } else {
                 content = Object.entries(metadata).map(e => `${e[0]}: ${e[1]}`).join("\n");
@@ -481,8 +588,9 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `metadata_export.${format}`;
+            a.download = fileName;
             a.click();
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
