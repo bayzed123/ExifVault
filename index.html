@@ -441,7 +441,9 @@
                 const data = await res.json();
 
                 downloadLink.href = data.downloadUrl;
-                downloadLink.download = data.fileName;
+                // Ensure filename is safe for download attribute
+                const safeFileName = (data.fileName || 'processed_image.jpg').replace(/[^\w\s.-]/gi, '_');
+                downloadLink.download = safeFileName;
                 downloadArea.style.display = 'block';
                 status.textContent = "ASSET REBUILT PERFECTLY.";
                 status.style.color = "var(--success)";

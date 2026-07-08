@@ -43,7 +43,8 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
   if (!req.file) return res.status(400).send("No image uploaded.");
 
   const inputPath = req.file.path;
-  const alteredPath = inputPath + "_altered.jpg";
+  const alteredFilename = req.file.filename + "_altered.jpg";
+  const alteredPath = path.join(uploadDir, alteredFilename);
 
   try {
     const image = sharp(inputPath);
@@ -60,14 +61,19 @@ app.post("/analyze", upload.single("image"), async (req, res) => {
         return res.status(500).send("Analysis Error.");
       }
       
-      const exifData = JSON.parse(stdout)[0];
-      res.json({
-        tempFile: path.basename(alteredPath),
-        originalName: req.file.originalname,
-        dynamicMetadata: exifData
-      });
-      
-      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      try {
+        const exifData = JSON.parse(stdout)[0];
+        res.json({
+          tempFile: alteredFilename,
+          originalName: req.file.originalname,
+          dynamicMetadata: exifData
+        });
+      } catch (parseErr) {
+        console.error("JSON Parse Error:", parseErr);
+        res.status(500).send("Metadata Analysis Error.");
+      } finally {
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      }
     });
   } catch (err) {
     console.error("Sharp Processing Error:", err);
@@ -89,19 +95,35 @@ app.post("/process", async (req, res) => {
     return res.status(404).send("Temporary file not found.");
   }
 
-  const escape = (s) => String(s || "").replace(/"/g, '\\"');
-
-  let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all=", "--trailer:all", "-MakerNotes:all=", "-PreviewImage=", "-ThumbnailImage="];
+  // Use an argument file for exiftool to prevent command injection and handle long arguments
+  const argFile = path.join(uploadDir, `args_${tempFile}.txt`);
+  let argContent = [
+    "-all=",
+    "-XMP:all=",
+    "-IPTC:all=",
+    "-Photoshop:all=",
+    "--trailer:all",
+    "-MakerNotes:all=",
+    "-PreviewImage=",
+    "-ThumbnailImage="
+  ];
 
   for (let [key, value] of Object.entries(metadata)) {
     if (value !== undefined && value !== null && value !== "") {
-      exifArgs.push(`-${key}="${escape(value)}"`);
+      // Strip 'EXIF:' or 'GPS:' prefix if present as exiftool handles it better in arg files
+      const cleanKey = key.includes(':') ? key.split(':')[1] : key;
+      argContent.push(`-${cleanKey}=${value}`);
     }
   }
+  
+  argContent.push("-o");
+  argContent.push(outputPath);
+  argContent.push(inputPath);
 
-  const cmd = `exiftool ${exifArgs.join(" ")} -o "${outputPath}" "${inputPath}"`;
+  fs.writeFileSync(argFile, argContent.join("\n"));
 
-  exec(cmd, (err) => {
+  exec(`exiftool -@ "${argFile}"`, (err) => {
+    if (fs.existsSync(argFile)) fs.unlinkSync(argFile);
     if (err) {
       console.error("ExifTool Injection Error:", err);
       return res.status(500).send("Metadata Injection Error.");
@@ -141,13 +163,17 @@ setInterval(() => {
     if (err) return console.error("Cleanup Query Error:", err);
 
     rows.forEach(row => {
-      // Delete Files
-      if (fs.existsSync(row.temp_path)) fs.unlinkSync(row.temp_path);
-      if (fs.existsSync(row.output_path)) fs.unlinkSync(row.output_path);
-      
-      // Delete DB Record
-      db.run(`DELETE FROM records WHERE id = ?`, [row.id]);
-      console.log(`[Cleanup] Deleted expired asset: ${row.filename}`);
+      try {
+        // Delete Files
+        if (row.temp_path && fs.existsSync(row.temp_path)) fs.unlinkSync(row.temp_path);
+        if (row.output_path && fs.existsSync(row.output_path)) fs.unlinkSync(row.output_path);
+        
+        // Delete DB Record
+        db.run(`DELETE FROM records WHERE id = ?`, [row.id]);
+        console.log(`[Cleanup] Deleted expired asset: ${row.filename}`);
+      } catch (cleanupErr) {
+        console.error(`[Cleanup Error] Failed to delete asset ${row.filename}:`, cleanupErr);
+      }
     });
   });
 
