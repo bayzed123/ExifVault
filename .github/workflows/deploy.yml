@@ -1,0 +1,40 @@
+name: Storyline Archiver Deploy & Update
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual trigger'
+        required: false
+        default: 'Manual update'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Install ExifTool
+      run: sudo apt-get update && sudo apt-get install -y libimage-exiftool-perl
+
+    - name: Verify Environment
+      run: |
+        node -v
+        npm -v
+        exiftool -version
+        
+    - name: Build Log
+      run: echo "Update triggered by ${{ github.actor }}: ${{ github.event.inputs.reason || 'Push to main' }}"
