@@ -1,6 +1,6 @@
-
 const express = require("express");
 const multer = require("multer");
+const sharp = require("sharp");
 const { exec } = require("child_process");
 const path = require("path");
 const fs = require("fs");
@@ -8,93 +8,124 @@ const fs = require("fs");
 const app = express();
 const port = 3000;
 
+// Ensure directories exist
+const uploadDir = path.join(__dirname, "uploads");
+const outputDir = path.join(__dirname, "outputs");
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+
 const upload = multer({
   dest: "uploads/",
   limits: { fileSize: 50 * 1024 * 1024 },
 });
 
 app.use(express.static(__dirname));
+app.use(express.json());
 
-app.post("/upload", upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).send("No asset uploaded.");
+/**
+ * Phase 1 & 2: Pixel Disruption & Dynamic Analysis
+ */
+app.post("/analyze", upload.single("image"), async (req, res) => {
+  if (!req.file) return res.status(400).send("No image uploaded.");
 
-  const input = req.file.path;
-  const output = input + "_processed";
-  
-  let meta = {};
+  const inputPath = req.file.path;
+  const alteredPath = inputPath + "_altered.jpg";
+
   try {
-    meta = JSON.parse(req.body.customMetadata);
-  } catch (e) {
-    return res.status(400).send("Invalid metadata.");
+    // Phase 1: Watermark Disruption (Pixel Lattice Alteration)
+    // 1% dimension resize or 1px crop + 98% quality re-compression
+    const image = sharp(inputPath);
+    const metadata = await image.metadata();
+    
+    // Apply 1px crop to disrupt lattice
+    await image
+      .extract({ left: 0, top: 0, width: metadata.width - 1, height: metadata.height - 1 })
+      .jpeg({ quality: 98 })
+      .toFile(alteredPath);
+
+    // Phase 2: Dynamic Analysis
+    exec(`exiftool -json "${alteredPath}"`, (err, stdout) => {
+      if (err) {
+        console.error("ExifTool Analysis Error:", err);
+        return res.status(500).send("Analysis Error.");
+      }
+      
+      const exifData = JSON.parse(stdout)[0];
+      res.json({
+        tempFile: path.basename(alteredPath),
+        originalName: req.file.originalname,
+        dynamicMetadata: exifData
+      });
+      
+      // Cleanup original upload
+      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    });
+  } catch (err) {
+    console.error("Sharp Processing Error:", err);
+    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+    res.status(500).send("Image Processing Error.");
+  }
+});
+
+/**
+ * Phase 3: Processing Execution (Metadata Injection)
+ */
+app.post("/process", async (req, res) => {
+  const { tempFile, metadata, originalName } = req.body;
+  const inputPath = path.join(uploadDir, tempFile);
+  const outputPath = path.join(outputDir, "processed_" + tempFile);
+
+  if (!fs.existsSync(inputPath)) {
+    return res.status(404).send("Temporary file not found.");
   }
 
-  const escape = (s) => (s || "").replace(/"/g, '\\"');
-  
-  // Build the ExifTool command dynamically based on provided tags
-  // -all= : Wipe all standard tags
-  // -XMP:all= -IPTC:all= -Photoshop:all= : Wipe deep metadata layers
-  // --trailer:all : Remove all data after the image end (where AI/Adobe often hide things)
-  // -MakerNotes:all= : Wipe manufacturer-specific hidden data
-  // -PreviewImage= -ThumbnailImage= : Wipe hidden low-res previews of the original
-  let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all=", "--trailer:all", "-MakerNotes:all=", "-PreviewImage=", "-ThumbnailImage="];
-  
-  // Mapping frontend tag names to ExifTool tag names
-  const tagMap = {
-    "Make": "EXIF:Make",
-    "Model": "EXIF:Model",
-    "Artist": "EXIF:Artist",
-    "Software": "EXIF:Software",
-    "Copyright": "EXIF:Copyright",
-    "By-line": "IPTC:By-line",
-    "CopyrightNotice": "IPTC:CopyrightNotice",
-    "ObjectName": "IPTC:ObjectName",
-    "Caption-Abstract": "IPTC:Caption-Abstract",
-    "Keywords": "IPTC:Keywords",
-    // Advanced/C2PA/JUMD (simulated via XMP or custom tags if supported)
-    "JUMDType": "XMP:JUMDType",
-    "JUMDLabel": "XMP:JUMDLabel",
-    "C2PAActionsV2Salt": "XMP:C2PAActionsV2Salt",
-    "ActionsAction": "XMP:ActionsAction",
-    "ActionsSoftwareAgentName": "XMP:ActionsSoftwareAgentName",
-    "InstanceID": "XMP:InstanceID",
-    "Title": "XMP:Title",
-    "Category": "IPTC:Category"
+  const escape = (s) => {
+    if (typeof s !== 'string') s = String(s);
+    return s.replace(/"/g, '\\"');
   };
 
-  for (let [key, value] of Object.entries(meta)) {
-    if (value) {
-      const exifTag = tagMap[key] || `XMP:${key}`; // Default to XMP if not in map
-      exifArgs.push(`-${exifTag}="${escape(value)}"`);
+  // Build ExifTool command
+  // 1. Destructive sweep (-all=)
+  // 2. Inject new payload
+  let exifArgs = ["-all=", "-XMP:all=", "-IPTC:all=", "-Photoshop:all=", "--trailer:all", "-MakerNotes:all=", "-PreviewImage=", "-ThumbnailImage="];
+
+  for (let [key, value] of Object.entries(metadata)) {
+    if (value !== undefined && value !== null && value !== "") {
+      // Handle GPS specifically if needed, but here we assume keys are formatted for ExifTool
+      exifArgs.push(`-${key}="${escape(value)}"`);
     }
   }
 
-  // Add default archival randomization if not manually set
-  if (!meta.DateTimeOriginal) {
-    const scanDate = `${2015 + Math.floor(Math.random() * 9)}:06:20 12:00:00`;
-    exifArgs.push(`-EXIF:DateTimeOriginal="${scanDate}"`);
-    exifArgs.push(`-EXIF:CreateDate="${scanDate}"`);
-  }
-  if (!meta.SerialNumber) {
-    const serial = Math.random().toString(36).substring(2, 12).toUpperCase();
-    exifArgs.push(`-EXIF:SerialNumber="${serial}"`);
-  }
-
-  const cmd = `exiftool ${exifArgs.join(" ")} -o "${output}" "${input}"`;
+  const cmd = `exiftool ${exifArgs.join(" ")} -o "${outputPath}" "${inputPath}"`;
 
   exec(cmd, (err) => {
     if (err) {
-      console.error(err);
-      if (fs.existsSync(input)) fs.unlinkSync(input);
-      return res.status(500).send("Archival Processing Error.");
+      console.error("ExifTool Injection Error:", err);
+      return res.status(500).send("Metadata Injection Error.");
     }
 
-    res.download(output, `Archive_${req.file.originalname}`, () => {
-      if (fs.existsSync(input)) fs.unlinkSync(input);
-      if (fs.existsSync(output)) fs.unlinkSync(output);
+    res.json({
+      downloadUrl: `/download/${path.basename(outputPath)}`,
+      fileName: `Archive_${originalName || 'image.jpg'}`
     });
+
+    // Cleanup altered temp file
+    if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
   });
 });
 
-if (!fs.existsSync("uploads")) fs.mkdirSync("uploads");
+app.get("/download/:filename", (req, res) => {
+  const filePath = path.join(outputDir, req.params.filename);
+  if (fs.existsSync(filePath)) {
+    res.download(filePath, (err) => {
+      if (!err) {
+        // Cleanup after download
+        fs.unlinkSync(filePath);
+      }
+    });
+  } else {
+    res.status(404).send("File not found.");
+  }
+});
 
-app.listen(port, () => console.log(`Curator Dashboard active on port ${port}`));
+app.listen(port, () => console.log(`Storyline Archiver Engine active on port ${port}`));

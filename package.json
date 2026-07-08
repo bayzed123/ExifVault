@@ -1,14 +1,17 @@
-
 {
-  "name": "bayezid-storyline-archival-suite",
-  "version": "2.0.0",
-  "description": "Museum-Grade Archival Tool for High-Res Assets",
+  "name": "exifvault",
+  "version": "3.0.0",
+  "description": "Storyline Archiver - AI Watermark Disruption & Metadata Rebuilder",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1"
-  }
+    "express": "^4.21.0",
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.33.5"
+  },
+  "author": "Bayezid Storyline",
+  "license": "MIT"
 }
